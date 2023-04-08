@@ -1,36 +1,36 @@
 use std::ops;
 
 #[derive(Clone, Copy, Debug)]
-pub struct Vec3(f64, f64, f64);
+pub struct Vec3(pub f64, pub f64, pub f64);
 
 impl Vec3 {
-    fn x(&self) -> f64 {
+    pub fn x(&self) -> f64 {
         self.0
     }
 
-    fn y(&self) -> f64 {
+    pub fn y(&self) -> f64 {
         self.1
     }
 
-    fn z(&self) -> f64 {
+    pub fn z(&self) -> f64 {
         self.2
     }
 
-    fn length(&self) -> f64 {
+    pub fn length(&self) -> f64 {
         f64::sqrt(self.length_squared())
     }
 
-    fn length_squared(&self) -> f64 {
+    pub fn length_squared(&self) -> f64 {
         self.0 * self.0 + self.1 * self.1 + self.2 * self.2
     }
 
     #[inline]
-    fn dot(u: Vec3, v: Vec3) -> f64 {
+    pub fn dot(u: Vec3, v: Vec3) -> f64 {
         u.0 * v.0 + u.1 * v.1 + u.2 * v.2
     }
 
     #[inline]
-    fn cross(u: Vec3, v: Vec3) -> Vec3 {
+    pub fn cross(u: Vec3, v: Vec3) -> Vec3 {
         Vec3(
             u.1 * v.2 - u.2 * v.1,
             u.2 * v.0 - u.0 * v.2,
@@ -39,7 +39,7 @@ impl Vec3 {
     }
 
     #[inline]
-    fn unit_vector(v: Vec3) -> Vec3 {
+    pub fn unit_vector(v: Vec3) -> Vec3 {
         v / v.length()
     }
 }
@@ -131,5 +131,14 @@ impl ops::Div<f64> for Vec3 {
     }
 }
 
-type Point3 = Vec3;
-type Color = Vec3;
+pub type Point3 = Vec3;
+pub type Color = Vec3;
+
+pub fn write_color(pixel_color: Color) {
+    println!(
+        "{} {} {}",
+        (255.999 * pixel_color.x()) as i32,
+        (255.999 * pixel_color.y()) as i32,
+        (255.999 * pixel_color.z()) as i32
+    );
+}
