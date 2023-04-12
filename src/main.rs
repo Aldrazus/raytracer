@@ -5,10 +5,28 @@ use crate::vec3::{write_color, Color, Point3, Vec3};
 mod ray;
 mod vec3;
 
-fn ray_color(ray: &Ray) -> Color {
-    let unit_direction = Vec3::unit_vector(ray.direction);
+fn ray_color(r: &Ray) -> Color {
+    if let Some(t) = hit_sphere(&Vec3(0., 0., -1.), 0.5, r) {
+        let normal = Vec3::unit_vector(r.at(t) - Vec3(0., 0., -1.));
+        return 0.5 * Vec3(normal.x() + 1., normal.y() + 1., normal.z() + 1.);
+    }
+    let unit_direction = Vec3::unit_vector(r.direction);
     let t = 0.5 * (unit_direction.y() + 1.0);
     (1.0 - t) * Vec3(1.0, 1.0, 1.0) + t * Vec3(0.5, 0.7, 1.0)
+}
+
+fn hit_sphere(center: &Point3, radius: f64, r: &Ray) -> Option<f64> {
+    let oc = r.origin - *center;
+    let a = r.direction.length_squared();
+    let half_b = Vec3::dot(oc, r.direction);
+    let c = oc.length_squared() - radius * radius;
+    let discriminant = half_b * half_b - a * c;
+    
+    if discriminant < 0. {
+        None
+    } else {
+        Some((-half_b - f64::sqrt(discriminant)) / a)
+    }
 }
 
 fn main() {
