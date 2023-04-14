@@ -1,13 +1,16 @@
+use rand::prelude::*;
 use std::rc::Rc;
 
 use hittable::{HitRecord, Hittable};
 use ray::Ray;
 
 use crate::{
+    camera::Camera,
     hittable::{HittableList, Sphere},
     vec3::{write_color, Color, Point3, Vec3},
 };
 
+mod camera;
 mod hittable;
 mod ray;
 mod util;
@@ -28,6 +31,7 @@ fn main() {
     let aspect_ratio = 16.0 / 9.0;
     let image_width = 400;
     let image_height = (image_width as f64 / aspect_ratio) as i32;
+    const SAMPLES_PER_PIXEL: i32 = 100;
 
     // World
     let mut world = HittableList::new();
@@ -41,14 +45,7 @@ fn main() {
     }));
 
     // Camera
-    let viewport_height = 2.0;
-    let viewport_width = aspect_ratio * viewport_height;
-    let focal_length = 1.0;
-
-    let origin: Point3 = Vec3(0., 0., 0.);
-    let horizontal = Vec3(viewport_width, 0., 0.);
-    let vertical = Vec3(0., viewport_height, 0.);
-    let lower_left_corner = origin - horizontal / 2. - vertical / 2. - Vec3(0., 0., focal_length);
+    let camera = Camera::new();
 
     // Render
     println!("P3\n{} {}\n255", image_width, image_height);
@@ -56,14 +53,14 @@ fn main() {
     for j in (0..image_height).rev() {
         eprintln!("\rScanlines remaining: {}", j);
         for i in 0..image_width {
-            let u = i as f64 / (image_width - 1) as f64;
-            let v = j as f64 / (image_height - 1) as f64;
-            let r = Ray::new(
-                origin,
-                lower_left_corner + u * horizontal + v * vertical - origin,
-            );
-            let pixel_color = ray_color(&r, &world);
-            write_color(pixel_color);
+            let mut pixel_color: Color = Vec3(0., 0., 0.);
+            for _sample in 0..SAMPLES_PER_PIXEL {
+                let u = (i as f64 + random::<f64>()) / (image_width - 1) as f64;
+                let v = (j as f64 + random::<f64>()) / (image_height - 1) as f64;
+                let r = camera.get_ray(u, v);
+                pixel_color += ray_color(&r, &world);
+            }
+            write_color(pixel_color, SAMPLES_PER_PIXEL);
         }
     }
 

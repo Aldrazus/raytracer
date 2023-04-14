@@ -1,3 +1,4 @@
+use std::num;
 use std::ops;
 
 #[derive(Clone, Copy, Debug)]
@@ -134,11 +135,19 @@ impl ops::Div<f64> for Vec3 {
 pub type Point3 = Vec3;
 pub type Color = Vec3;
 
-pub fn write_color(pixel_color: Color) {
+pub fn write_color(pixel_color: Color, samples_per_pixel: i32) {
+    let Vec3(mut r, mut g, mut b) = pixel_color;
+
+    // Divide the color by the number of samples.
+    let scale = 1.0 / samples_per_pixel as f64;
+    r *= scale;
+    g *= scale;
+    b *= scale;
+
     println!(
         "{} {} {}",
-        (255.999 * pixel_color.x()) as i32,
-        (255.999 * pixel_color.y()) as i32,
-        (255.999 * pixel_color.z()) as i32
+        (256. * r.clamp(0., 0.999)) as i32,
+        (256. * g.clamp(0., 0.999)) as i32,
+        (256. * b.clamp(0., 0.999)) as i32
     );
 }
