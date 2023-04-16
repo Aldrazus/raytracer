@@ -1,6 +1,8 @@
 use std::num;
 use std::ops;
 
+use rand::prelude::*;
+
 #[derive(Clone, Copy, Debug)]
 pub struct Vec3(pub f64, pub f64, pub f64);
 
@@ -42,6 +44,41 @@ impl Vec3 {
     #[inline]
     pub fn unit_vector(v: Vec3) -> Vec3 {
         v / v.length()
+    }
+
+    #[inline]
+    pub fn random() -> Vec3 {
+        Vec3(random(), random(), random())
+    }
+
+    #[inline]
+    pub fn random_in_range(min: f64, max: f64) -> Vec3 {
+        let mut rng = thread_rng();
+        Vec3(
+            rng.gen_range(min..max),
+            rng.gen_range(min..max),
+            rng.gen_range(min..max),
+        )
+    }
+
+    #[inline]
+    pub fn random_in_unit_sphere() -> Vec3 {
+        loop {
+            let p = Vec3::random_in_range(-1., 1.);
+            if p.length_squared() >= 1. {
+                continue;
+            }
+            return p;
+        }
+    }
+
+    pub fn random_in_hemisphere(normal: &Vec3) -> Vec3 {
+        let in_unit_sphere = Vec3::random_in_unit_sphere();
+        if Vec3::dot(in_unit_sphere, *normal) > 0. {
+            return in_unit_sphere;
+        } else {
+            return -in_unit_sphere;
+        }
     }
 }
 
@@ -138,11 +175,11 @@ pub type Color = Vec3;
 pub fn write_color(pixel_color: Color, samples_per_pixel: i32) {
     let Vec3(mut r, mut g, mut b) = pixel_color;
 
-    // Divide the color by the number of samples.
+    // Divide the color by the number of samples and gamma-correct for gamma=2.0.
     let scale = 1.0 / samples_per_pixel as f64;
-    r *= scale;
-    g *= scale;
-    b *= scale;
+    r = f64::sqrt(scale * r);
+    g = f64::sqrt(scale * g);
+    b = f64::sqrt(scale * b);
 
     println!(
         "{} {} {}",
