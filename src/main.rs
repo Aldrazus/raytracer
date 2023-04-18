@@ -1,7 +1,7 @@
 use rand::prelude::*;
 use std::rc::Rc;
 
-use hittable::{HitRecord, Hittable};
+use hittable::Hittable;
 use ray::Ray;
 
 use crate::{
@@ -12,21 +12,18 @@ use crate::{
 
 mod camera;
 mod hittable;
-mod material;
 mod ray;
 mod util;
 mod vec3;
 
 fn ray_color(r: &Ray, world: &dyn Hittable, depth: i32) -> Color {
-    let mut rec = HitRecord::new();
-
     if depth <= 0 {
         return Vec3(0., 0., 0.);
     }
 
-    if world.hit(r, 0.001, f64::INFINITY, &mut rec) {
-        let target = rec.p + Vec3::random_in_hemisphere(&rec.normal);
-        return 0.5 * ray_color(&Ray::new(rec.p, target - rec.p), world, depth - 1);
+    if let Some(hit) = world.hit(r, 0.001, f64::INFINITY) {
+        let target = hit.p + Vec3::random_in_hemisphere(&hit.normal);
+        return 0.5 * ray_color(&Ray::new(hit.p, target - hit.p), world, depth - 1);
     }
     let unit_direction = Vec3::unit_vector(r.direction);
     let t = 0.5 * (unit_direction.y() + 1.0);
