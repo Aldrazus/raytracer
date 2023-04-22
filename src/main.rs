@@ -1,3 +1,4 @@
+use material::ScatterModel;
 use rand::prelude::*;
 use std::rc::Rc;
 
@@ -7,7 +8,7 @@ use ray::Ray;
 use crate::{
     camera::Camera,
     hittable::{HittableList, Sphere},
-    vec3::{write_color, Color, Point3, Vec3},
+    vec3::{write_color, Color, Point3, Vec3}, material::{Lambertian, Metal},
 };
 
 mod camera;
@@ -15,6 +16,7 @@ mod hittable;
 mod ray;
 mod util;
 mod vec3;
+mod material;
 
 fn ray_color(r: &Ray, world: &dyn Hittable, depth: i32) -> Color {
     if depth <= 0 {
@@ -22,8 +24,9 @@ fn ray_color(r: &Ray, world: &dyn Hittable, depth: i32) -> Color {
     }
 
     if let Some(hit) = world.hit(r, 0.001, f64::INFINITY) {
-        let target = hit.p + Vec3::random_in_hemisphere(&hit.normal);
-        return 0.5 * ray_color(&Ray::new(hit.p, target - hit.p), world, depth - 1);
+        if let Some(ScatterModel { attenuation, scattered }) = hit.material.scatter(r, &hit) {
+            return attenuation * ray_color(&scattered, world, depth - 1)
+        }
     }
     let unit_direction = Vec3::unit_vector(r.direction);
     let t = 0.5 * (unit_direction.y() + 1.0);
@@ -40,14 +43,16 @@ fn main() {
 
     // World
     let mut world = HittableList::new();
-    world.add(Rc::new(Sphere {
-        center: Vec3(0., 0., -1.),
-        radius: 0.5,
-    }));
-    world.add(Rc::new(Sphere {
-        center: Vec3(0., -100.5, -1.),
-        radius: 100.,
-    }));
+
+    let material_ground = Rc::new(Lambertian::new(Vec3(0.8, 0.8, 0.0)));
+    let material_center = Rc::new(Lambertian::new(Vec3(0.7, 0.3, 0.3)));
+    let material_left = Rc::new(Metal::new(Vec3(0.8, 0.8, 0.8), 0.3));
+    let material_right = Rc::new(Metal::new(Vec3(0.8, 0.6, 0.2), 1.0));
+
+    world.add(Rc::new(Sphere::new(Vec3(0.0, -100.5, -1.0), 100., material_ground.clone())));
+    world.add(Rc::new(Sphere::new(Vec3(0.0, 0.0, -1.0), 0.5, material_center.clone())));
+    world.add(Rc::new(Sphere::new(Vec3(-1.0, 0.0, -1.0), 0.5, material_left.clone())));
+    world.add(Rc::new(Sphere::new(Vec3(1.0, 0.0, -1.0), 0.5, material_right.clone())));
 
     // Camera
     let camera = Camera::new();
