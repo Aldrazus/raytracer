@@ -1,5 +1,5 @@
-use std::f64::consts::PI;
+use std::f32::consts::PI;
 
-pub fn degrees_to_radians(degrees: f64) -> f64 {
+pub fn degrees_to_radians(degrees: f32) -> f32 {
     degrees * PI / 180.0
 }
