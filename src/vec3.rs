@@ -73,7 +73,7 @@ pub fn refract(uv: &Vec3, n: &Vec3, etai_over_etat: f32) -> Vec3 {
 pub type Point3 = Vec3;
 pub type Color = Vec3;
 
-pub fn write_color(pixel_color: Color, samples_per_pixel: i32) {
+pub fn write_color(pixel_color: Color, samples_per_pixel: i32) -> (u8, u8, u8) {
     let Vec3 {
         x: mut r,
         y: mut g,
@@ -86,10 +86,7 @@ pub fn write_color(pixel_color: Color, samples_per_pixel: i32) {
     g = f32::sqrt(scale * g);
     b = f32::sqrt(scale * b);
 
-    println!(
-        "{} {} {}",
-        (256. * r.clamp(0., 0.999)) as i32,
-        (256. * g.clamp(0., 0.999)) as i32,
-        (256. * b.clamp(0., 0.999)) as i32
-    );
+        ((256. * r.clamp(0., 0.999)) as u8,
+        (256. * g.clamp(0., 0.999)) as u8,
+        (256. * b.clamp(0., 0.999)) as u8)
 }

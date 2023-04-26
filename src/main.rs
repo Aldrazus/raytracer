@@ -1,6 +1,6 @@
 use material::{Material, ScatterModel};
 use rand::prelude::*;
-use std::rc::Rc;
+use std::{rc::Rc, fs::File, path::Path, io::{Write, stdout}};
 use vec3::random_in_range;
 
 use hittable::Hittable;
@@ -106,13 +106,23 @@ fn random_scene() -> HittableList {
     world
 }
 
+fn write_ppm(buf: Vec<u8>, image_width: i32, image_height: i32) {
+    let mut out = stdout().lock();
+    writeln!(out, "P3\n{} {}\n255", image_width, image_height).unwrap();
+    buf.chunks_exact(3).for_each(|chunk| {
+        if let [r, g, b] = chunk {
+            writeln!(out, "{} {} {}", r, g, b).unwrap();
+        }
+    });
+}
+
 fn main() {
     // Image
     let aspect_ratio = 3.0 / 2.0;
     let image_width = 1200;
     let image_height = (image_width as f32 / aspect_ratio) as i32;
-    const SAMPLES_PER_PIXEL: i32 = 500;
-    const MAX_DEPTH: i32 = 50;
+    const SAMPLES_PER_PIXEL: i32 = 50;
+    const MAX_DEPTH: i32 = 10;
 
     // World
     let world = random_scene();
@@ -134,7 +144,8 @@ fn main() {
     );
 
     // Render
-    println!("P3\n{} {}\n255", image_width, image_height);
+
+    let mut buf = Vec::<u8>::with_capacity((image_height * image_width * 3) as usize);
 
     for j in (0..image_height).rev() {
         eprintln!("\rScanlines remaining: {}", j);
@@ -146,9 +157,14 @@ fn main() {
                 let r = camera.get_ray(u, v);
                 pixel_color += ray_color(&r, &world, MAX_DEPTH);
             }
-            write_color(pixel_color, SAMPLES_PER_PIXEL);
+            let (r, g, b) = write_color(pixel_color, SAMPLES_PER_PIXEL);
+            buf.push(r);
+            buf.push(g);
+            buf.push(b);
         }
     }
+
+    write_ppm(buf, image_width, image_height);
 
     eprintln!("\nDone.");
 }
